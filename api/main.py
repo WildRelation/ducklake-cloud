@@ -140,7 +140,7 @@ def ny_order(order: NyOrder):
 @app.get("/api/datasets")
 def lista_datasets():
     con = get_conn()
-    tabeller = con.execute("SHOW TABLES").fetchall()
+    tabeller = con.execute("SELECT table_name FROM duckdb_tables() WHERE database_name = 'lake'").fetchall()
     con.close()
     return [{"namn": r[0]} for r in tabeller]
 
@@ -148,7 +148,7 @@ def lista_datasets():
 @app.get("/api/datasets/{namn}")
 def hamta_dataset(namn: str, limit: int = 100):
     con = get_conn()
-    tabeller = [r[0] for r in con.execute("SHOW TABLES").fetchall()]
+    tabeller = [r[0] for r in con.execute("SELECT table_name FROM duckdb_tables() WHERE database_name = 'lake'").fetchall()]
     if namn not in tabeller:
         con.close()
         raise HTTPException(status_code=404, detail=f"Dataset '{namn}' hittades inte")
