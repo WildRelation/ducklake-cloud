@@ -14,7 +14,7 @@ public class ApiController {
 
     private final DuckLakeService lake;
 
-    @Value("${API_KEY}")
+    @Value("${ducklake.api.key}")
     private String apiKey;
 
     public ApiController(DuckLakeService lake) {

@@ -10,17 +10,17 @@ import java.util.*;
 @Service
 public class DuckLakeService {
 
-    @Value("${POSTGRES_HOST}") private String pgHost;
-    @Value("${POSTGRES_PORT}") private String pgPort;
-    @Value("${POSTGRES_DB}")   private String pgDb;
-    @Value("${POSTGRES_USER}") private String pgUser;
-    @Value("${POSTGRES_PASSWORD}") private String pgPass;
+    @Value("${ducklake.postgres.host}")     private String pgHost;
+    @Value("${ducklake.postgres.port}")     private String pgPort;
+    @Value("${ducklake.postgres.db}")       private String pgDb;
+    @Value("${ducklake.postgres.user}")     private String pgUser;
+    @Value("${ducklake.postgres.password}") private String pgPass;
 
-    @Value("${S3_ENDPOINT}")  private String s3Endpoint;
-    @Value("${S3_KEY_ID}")    private String s3KeyId;
-    @Value("${S3_SECRET}")    private String s3Secret;
-    @Value("${S3_BUCKET}")    private String s3Bucket;
-    @Value("${S3_REGION}")    private String s3Region;
+    @Value("${ducklake.s3.endpoint}")  private String s3Endpoint;
+    @Value("${ducklake.s3.keyid}")     private String s3KeyId;
+    @Value("${ducklake.s3.secret}")    private String s3Secret;
+    @Value("${ducklake.s3.bucket}")    private String s3Bucket;
+    @Value("${ducklake.s3.region}")    private String s3Region;
 
     @PostConstruct
     public void installExtensions() throws SQLException {
