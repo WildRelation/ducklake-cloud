@@ -99,7 +99,7 @@ def predict(p: Passagerare):
     return {
         "predicted_survival":   survival,
         "survival_probability": probability,
-        "tolkning": "Överlevde" if survival == 1 else "Överlevde inte"
+        "tolkning": "Overlevde" if survival == 1 else "Overlevde inte"
     }
 
 
@@ -115,9 +115,11 @@ def dashboard():
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
-    header { background: #1a1a2e; color: white; padding: 20px 32px; }
+    header { background: #1a1a2e; color: white; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
     header h1 { font-size: 22px; }
     header p  { font-size: 13px; color: #aaa; margin-top: 4px; }
+    .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .lang-btn:hover { background: rgba(255,255,255,0.2); }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 24px 32px 0; }
     .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
     .card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
@@ -148,70 +150,173 @@ def dashboard():
 </head>
 <body>
 <header>
-  <h1>Titanic ML — DuckLake Feature Store</h1>
-  <p>Random Forest-modell tränad på Titanic-passagerardata</p>
+  <div>
+    <h1>Titanic ML &mdash; DuckLake Feature Store</h1>
+    <p data-i18n="subtitle">Random Forest-modell tranad pa Titanic-passagerardata</p>
+  </div>
+  <button class="lang-btn" onclick="toggleLang()">&#127760; English</button>
 </header>
 
 <div class="grid">
-  <div class="card"><div class="label">Träffsäkerhet</div><div class="value green" id="acc">—</div></div>
-  <div class="card"><div class="label">Precision (överlevde)</div><div class="value blue" id="prec">—</div></div>
-  <div class="card"><div class="label">Recall (överlevde)</div><div class="value orange" id="rec">—</div></div>
+  <div class="card"><div class="label" data-i18n="lbl_accuracy">Traffsakerhet</div><div class="value green" id="acc">&#8212;</div></div>
+  <div class="card"><div class="label" data-i18n="lbl_precision">Precision (overlevde)</div><div class="value blue" id="prec">&#8212;</div></div>
+  <div class="card"><div class="label" data-i18n="lbl_recall">Recall (overlevde)</div><div class="value orange" id="rec">&#8212;</div></div>
 </div>
 
 <div class="section" style="display:flex; gap:24px; flex-wrap:wrap;">
   <div>
-    <h2>Överlevnad i träningsdata</h2>
+    <h2 data-i18n="chart_survival">Overlevnad i traningsdata</h2>
     <div class="chart-wrap"><canvas id="survivalChart" width="360" height="260"></canvas></div>
   </div>
   <div>
-    <h2>Sannolikhetsfördelning</h2>
+    <h2 data-i18n="chart_prob">Sannolikhetsfordelning</h2>
     <div class="chart-wrap"><canvas id="probChart" width="360" height="260"></canvas></div>
   </div>
 </div>
 
 <div class="section">
-  <h2>Prediktioner (senaste 20)</h2>
+  <h2 data-i18n="tbl_heading">Prediktioner (senaste 20)</h2>
   <table id="pred-table">
-    <thead><tr><th>PassengerId</th><th>Förutsägelse</th><th>Sannolikhet</th></tr></thead>
+    <thead><tr>
+      <th>PassengerId</th>
+      <th data-i18n="tbl_prediction">Forutsagelse</th>
+      <th data-i18n="tbl_probability">Sannolikhet</th>
+    </tr></thead>
     <tbody></tbody>
   </table>
 </div>
 
 <div class="section">
-  <h2>Testa en passagerare</h2>
+  <h2 data-i18n="form_heading">Testa en passagerare</h2>
   <div class="card">
     <div class="form-grid">
       <div class="form-group">
-        <label>Klass</label>
-        <select id="f-class"><option value="1">1 — Första</option><option value="2">2 — Andra</option><option value="3" selected>3 — Tredje</option></select>
+        <label data-i18n="f_class">Klass</label>
+        <select id="f-class">
+          <option value="1" data-i18n="class_1">1 &mdash; Forsta</option>
+          <option value="2" data-i18n="class_2">2 &mdash; Andra</option>
+          <option value="3" data-i18n="class_3" selected>3 &mdash; Tredje</option>
+        </select>
       </div>
       <div class="form-group">
-        <label>Kön</label>
-        <select id="f-sex"><option value="1">Man</option><option value="0">Kvinna</option></select>
+        <label data-i18n="f_sex">Kon</label>
+        <select id="f-sex">
+          <option value="1" data-i18n="sex_male">Man</option>
+          <option value="0" data-i18n="sex_female">Kvinna</option>
+        </select>
       </div>
       <div class="form-group">
-        <label>Ålder</label>
+        <label data-i18n="f_age">Alder</label>
         <input type="number" id="f-age" value="30" min="0" max="100">
       </div>
       <div class="form-group">
-        <label>Familjestorlek (SibSp+Parch)</label>
+        <label data-i18n="f_family">Familjestorlek (SibSp+Parch)</label>
         <input type="number" id="f-family" value="0" min="0" max="10">
       </div>
       <div class="form-group">
-        <label>Biljettpris (£)</label>
+        <label data-i18n="f_fare">Biljettpris (&pound;)</label>
         <input type="number" id="f-fare" value="15" min="0">
       </div>
       <div class="form-group">
-        <label>Ombordstigning</label>
-        <select id="f-emb"><option value="0">Southampton</option><option value="1">Cherbourg</option><option value="2">Queenstown</option></select>
+        <label data-i18n="f_embarked">Ombordstigning</label>
+        <select id="f-emb">
+          <option value="0">Southampton</option>
+          <option value="1">Cherbourg</option>
+          <option value="2">Queenstown</option>
+        </select>
       </div>
     </div>
-    <button class="btn" onclick="predict()">Förutsäg</button>
+    <button class="btn" onclick="predict()" data-i18n="btn_predict">Forutsag</button>
     <div id="result-box"></div>
   </div>
 </div>
 
 <script>
+const T = {
+  sv: {
+    subtitle:      "Random Forest-modell tr\u00e4nad p\u00e5 Titanic-passagerardata",
+    lbl_accuracy:  "Tr\u00e4ffs\u00e4kerhet",
+    lbl_precision: "Precision (\u00f6verlevde)",
+    lbl_recall:    "Recall (\u00f6verlevde)",
+    chart_survival:"\u00d6verlevnad i tr\u00e4ningsdata",
+    chart_prob:    "Sannolikhetsf\u00f6rdelning",
+    tbl_heading:   "Prediktioner (senaste 20)",
+    tbl_prediction:"F\u00f6ruts\u00e4gelse",
+    tbl_probability:"Sannolikhet",
+    form_heading:  "Testa en passagerare",
+    f_class:       "Klass",
+    class_1:       "1 \u2014 F\u00f6rsta",
+    class_2:       "2 \u2014 Andra",
+    class_3:       "3 \u2014 Tredje",
+    f_sex:         "K\u00f6n",
+    sex_male:      "Man",
+    sex_female:    "Kvinna",
+    f_age:         "\u00c5lder",
+    f_family:      "Familjestorlek (SibSp+Parch)",
+    f_fare:        "Biljettpris (\u00a3)",
+    f_embarked:    "Ombordstigning",
+    btn_predict:   "F\u00f6ruts\u00e4g",
+    survived:      "\u00d6verlevde",
+    died:          "\u00d6verlevde inte",
+    chart_survived:"\u00d6verlevde",
+    chart_died:    "\u00d6verlevde inte",
+    lang_toggle:   "\ud83c\udf10 English",
+  },
+  en: {
+    subtitle:      "Random Forest model trained on Titanic passenger data",
+    lbl_accuracy:  "Accuracy",
+    lbl_precision: "Precision (survived)",
+    lbl_recall:    "Recall (survived)",
+    chart_survival:"Survival in training data",
+    chart_prob:    "Probability distribution",
+    tbl_heading:   "Predictions (latest 20)",
+    tbl_prediction:"Prediction",
+    tbl_probability:"Probability",
+    form_heading:  "Test a passenger",
+    f_class:       "Class",
+    class_1:       "1 \u2014 First",
+    class_2:       "2 \u2014 Second",
+    class_3:       "3 \u2014 Third",
+    f_sex:         "Sex",
+    sex_male:      "Male",
+    sex_female:    "Female",
+    f_age:         "Age",
+    f_family:      "Family size (SibSp+Parch)",
+    f_fare:        "Ticket fare (\u00a3)",
+    f_embarked:    "Port of embarkation",
+    btn_predict:   "Predict",
+    survived:      "Survived",
+    died:          "Did not survive",
+    chart_survived:"Survived",
+    chart_died:    "Did not survive",
+    lang_toggle:   "\ud83c\udf10 Svenska",
+  }
+};
+
+let lang = 'sv';
+let survivalChart;
+
+function t(key) { return T[lang][key] || key; }
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelector('.lang-btn').textContent = t('lang_toggle');
+  if (survivalChart) {
+    survivalChart.data.labels = [t('chart_died'), t('chart_survived')];
+    survivalChart.update();
+  }
+  document.querySelectorAll('.badge.yes').forEach(b => b.textContent = t('survived'));
+  document.querySelectorAll('.badge.no').forEach(b  => b.textContent = t('died'));
+}
+
+function toggleLang() {
+  lang = lang === 'sv' ? 'en' : 'sv';
+  applyLang();
+}
+
 async function load() {
   const [acc, preds, feats] = await Promise.all([
     fetch('/accuracy').then(r => r.json()),
@@ -227,18 +332,18 @@ async function load() {
   preds.forEach(p => {
     const tr = document.createElement('tr');
     const badge = p.predicted_survival === 1
-      ? '<span class="badge yes">Överlevde</span>'
-      : '<span class="badge no">Överlevde inte</span>';
-    tr.innerHTML = `<td>${p.PassengerId}</td><td>${badge}</td><td>${(p.survival_probability * 100).toFixed(1)}%</td>`;
+      ? '<span class="badge yes">' + t('survived') + '</span>'
+      : '<span class="badge no">'  + t('died')     + '</span>';
+    tr.innerHTML = '<td>' + p.PassengerId + '</td><td>' + badge + '</td><td>' + (p.survival_probability * 100).toFixed(1) + '%</td>';
     tbody.appendChild(tr);
   });
 
   const survived = feats.filter(f => f.label === 1).length;
   const died     = feats.length - survived;
-  new Chart(document.getElementById('survivalChart'), {
+  survivalChart = new Chart(document.getElementById('survivalChart'), {
     type: 'bar',
     data: {
-      labels: ['Överlevde inte', 'Överlevde'],
+      labels: [t('chart_died'), t('chart_survived')],
       datasets: [{ data: [died, survived], backgroundColor: ['#f8d7da', '#d4edda'], borderColor: ['#dc3545', '#28a745'], borderWidth: 2 }]
     },
     options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
@@ -254,6 +359,8 @@ async function load() {
     },
     options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
+
+  applyLang();
 }
 
 async function predict() {
@@ -269,8 +376,9 @@ async function predict() {
   const data = await res.json();
   const box  = document.getElementById('result-box');
   box.style.display = 'block';
-  box.className = data.predicted_survival === 1 ? 'survived' : 'died';
-  box.innerHTML = `<strong>${data.tolkning}</strong> — Sannolikhet: ${(data.survival_probability * 100).toFixed(1)}%`;
+  const survived = data.predicted_survival === 1;
+  box.className  = survived ? 'survived' : 'died';
+  box.innerHTML  = '<strong>' + (survived ? t('survived') : t('died')) + '</strong> &mdash; ' + t('tbl_probability') + ': ' + (data.survival_probability * 100).toFixed(1) + '%';
 }
 
 load();
