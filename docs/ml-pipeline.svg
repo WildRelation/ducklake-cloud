@@ -1,0 +1,131 @@
+<svg width="900" height="480" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <rect width="900" height="480" fill="#f8f9fa"/>
+  <text x="450" y="32" text-anchor="middle" font-size="18" font-weight="bold" fill="#20232a">ml-example — Pipeline och API</text>
+
+  <!-- Phase label: Startup -->
+  <text x="20" y="65" font-size="11" font-weight="bold" fill="#888">VID UPPSTART (lifespan)</text>
+
+  <!-- Step 1: CSV URL -->
+  <rect x="20" y="75" width="130" height="80" rx="10" fill="white" stroke="#0d6efd" stroke-width="2"/>
+  <rect x="20" y="75" width="130" height="28" rx="10" fill="#0d6efd"/>
+  <rect x="20" y="91" width="130" height="12" fill="#0d6efd"/>
+  <text x="85" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="white">① Titanic CSV</text>
+  <text x="85" y="122" text-anchor="middle" font-size="9" fill="#333">Laddas från GitHub</text>
+  <text x="85" y="137" text-anchor="middle" font-size="9" fill="#555">read_csv_auto(URL)</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="150" y1="115" x2="185" y2="115" stroke="#555" stroke-width="2" marker-end="url(#a1)"/>
+
+  <!-- Step 2: raw_titanic -->
+  <rect x="185" y="75" width="145" height="80" rx="10" fill="white" stroke="#17a2b8" stroke-width="2"/>
+  <rect x="185" y="75" width="145" height="28" rx="10" fill="#17a2b8"/>
+  <rect x="185" y="91" width="145" height="12" fill="#17a2b8"/>
+  <text x="257" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="white">② lake.raw_titanic</text>
+  <text x="257" y="122" text-anchor="middle" font-size="9" fill="#333">Rådata sparas i DuckLake</text>
+  <text x="257" y="137" text-anchor="middle" font-size="9" fill="#555">891 rader, alla kolumner</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="330" y1="115" x2="365" y2="115" stroke="#555" stroke-width="2" marker-end="url(#a1)"/>
+
+  <!-- Step 3: features -->
+  <rect x="365" y="75" width="155" height="80" rx="10" fill="white" stroke="#ffc107" stroke-width="2"/>
+  <rect x="365" y="75" width="155" height="28" rx="10" fill="#ffc107"/>
+  <rect x="365" y="91" width="155" height="12" fill="#ffc107"/>
+  <text x="442" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="white">③ lake.features</text>
+  <text x="442" y="118" text-anchor="middle" font-size="9" fill="#333">passenger_class, is_male</text>
+  <text x="442" y="132" text-anchor="middle" font-size="9" fill="#333">age, family_size, fare</text>
+  <text x="442" y="146" text-anchor="middle" font-size="9" fill="#333">embarked_enc, label</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="520" y1="115" x2="555" y2="115" stroke="#555" stroke-width="2" marker-end="url(#a1)"/>
+
+  <!-- Step 4: Random Forest -->
+  <rect x="555" y="75" width="145" height="80" rx="10" fill="white" stroke="#28a745" stroke-width="2"/>
+  <rect x="555" y="75" width="145" height="28" rx="10" fill="#28a745"/>
+  <rect x="555" y="91" width="145" height="12" fill="#28a745"/>
+  <text x="627" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="white">④ Random Forest</text>
+  <text x="627" y="122" text-anchor="middle" font-size="9" fill="#333">Tränas på 80% av datan</text>
+  <text x="627" y="137" text-anchor="middle" font-size="9" fill="#555">100 beslutsträd</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="700" y1="115" x2="735" y2="115" stroke="#555" stroke-width="2" marker-end="url(#a1)"/>
+
+  <!-- Step 5: predictions -->
+  <rect x="735" y="75" width="145" height="80" rx="10" fill="white" stroke="#6f42c1" stroke-width="2"/>
+  <rect x="735" y="75" width="145" height="28" rx="10" fill="#6f42c1"/>
+  <rect x="735" y="91" width="145" height="12" fill="#6f42c1"/>
+  <text x="807" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="white">⑤ lake.predictions</text>
+  <text x="807" y="122" text-anchor="middle" font-size="9" fill="#333">PassengerId</text>
+  <text x="807" y="137" text-anchor="middle" font-size="9" fill="#333">predicted_survival, prob</text>
+
+  <!-- DuckLake box around 2,3,5 -->
+  <rect x="175" y="60" width="715" height="110" rx="12" fill="none" stroke="#adb5bd" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="560" y="185" text-anchor="middle" font-size="10" fill="#888">DuckLake (lokal katalog: titanic.duckdb + Parquet-filer i lake-data/)</text>
+
+  <!-- Divider -->
+  <line x1="20" y1="210" x2="880" y2="210" stroke="#dee2e6" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="20" y="228" font-size="11" font-weight="bold" fill="#888">API-ENDPOINTS (efter uppstart)</text>
+
+  <!-- Endpoints row -->
+
+  <!-- /predict -->
+  <rect x="20" y="238" width="155" height="110" rx="10" fill="white" stroke="#0d6efd" stroke-width="2"/>
+  <rect x="20" y="238" width="155" height="28" rx="10" fill="#0d6efd"/>
+  <rect x="20" y="254" width="155" height="12" fill="#0d6efd"/>
+  <text x="97" y="254" text-anchor="middle" font-size="11" font-weight="bold" fill="white">POST /predict</text>
+  <text x="97" y="282" text-anchor="middle" font-size="9" fill="#333">Skicka in en passagerare</text>
+  <text x="97" y="297" text-anchor="middle" font-size="9" fill="#555">→ Modellen förutsäger</text>
+  <text x="97" y="312" text-anchor="middle" font-size="9" fill="#555">överlevnad + sannolikhet</text>
+  <text x="97" y="332" text-anchor="middle" font-size="9" fill="#0d6efd">Använder: ④ modellen</text>
+
+  <!-- /features -->
+  <rect x="195" y="238" width="155" height="110" rx="10" fill="white" stroke="#17a2b8" stroke-width="2"/>
+  <rect x="195" y="238" width="155" height="28" rx="10" fill="#17a2b8"/>
+  <rect x="195" y="254" width="155" height="12" fill="#17a2b8"/>
+  <text x="272" y="254" text-anchor="middle" font-size="11" font-weight="bold" fill="white">GET /features</text>
+  <text x="272" y="282" text-anchor="middle" font-size="9" fill="#333">Hämtar engineerade</text>
+  <text x="272" y="297" text-anchor="middle" font-size="9" fill="#333">features från laken</text>
+  <text x="272" y="312" text-anchor="middle" font-size="9" fill="#555">?limit=N</text>
+  <text x="272" y="332" text-anchor="middle" font-size="9" fill="#17a2b8">Läser: ③ lake.features</text>
+
+  <!-- /predictions -->
+  <rect x="370" y="238" width="155" height="110" rx="10" fill="white" stroke="#6f42c1" stroke-width="2"/>
+  <rect x="370" y="238" width="155" height="28" rx="10" fill="#6f42c1"/>
+  <rect x="370" y="254" width="155" height="12" fill="#6f42c1"/>
+  <text x="447" y="254" text-anchor="middle" font-size="11" font-weight="bold" fill="white">GET /predictions</text>
+  <text x="447" y="282" text-anchor="middle" font-size="9" fill="#333">Hämtar sparade</text>
+  <text x="447" y="297" text-anchor="middle" font-size="9" fill="#333">prediktioner ur laken</text>
+  <text x="447" y="312" text-anchor="middle" font-size="9" fill="#555">?limit=N</text>
+  <text x="447" y="332" text-anchor="middle" font-size="9" fill="#6f42c1">Läser: ⑤ lake.predictions</text>
+
+  <!-- /accuracy -->
+  <rect x="545" y="238" width="155" height="110" rx="10" fill="white" stroke="#28a745" stroke-width="2"/>
+  <rect x="545" y="238" width="155" height="28" rx="10" fill="#28a745"/>
+  <rect x="545" y="254" width="155" height="12" fill="#28a745"/>
+  <text x="622" y="254" text-anchor="middle" font-size="11" font-weight="bold" fill="white">GET /accuracy</text>
+  <text x="622" y="282" text-anchor="middle" font-size="9" fill="#333">Träffsäkerhet på</text>
+  <text x="622" y="297" text-anchor="middle" font-size="9" fill="#333">testdata (20%)</text>
+  <text x="622" y="312" text-anchor="middle" font-size="9" fill="#555">+ classification report</text>
+  <text x="622" y="332" text-anchor="middle" font-size="9" fill="#28a745">Från: ④ träningen</text>
+
+  <!-- /snapshots -->
+  <rect x="720" y="238" width="160" height="110" rx="10" fill="white" stroke="#fd7e14" stroke-width="2"/>
+  <rect x="720" y="238" width="160" height="28" rx="10" fill="#fd7e14"/>
+  <rect x="720" y="254" width="160" height="12" fill="#fd7e14"/>
+  <text x="800" y="254" text-anchor="middle" font-size="11" font-weight="bold" fill="white">GET /snapshots</text>
+  <text x="800" y="282" text-anchor="middle" font-size="9" fill="#333">Visar alla snapshots</text>
+  <text x="800" y="297" text-anchor="middle" font-size="9" fill="#333">i DuckLake-katalogen</text>
+  <text x="800" y="312" text-anchor="middle" font-size="9" fill="#555">Möjliggör time travel</text>
+  <text x="800" y="332" text-anchor="middle" font-size="9" fill="#fd7e14">Läser: DuckLake-katalog</text>
+
+  <!-- Bottom note -->
+  <rect x="20" y="368" width="860" height="90" rx="8" fill="white" stroke="#dee2e6" stroke-width="1"/>
+  <text x="450" y="390" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">Lagring</text>
+  <text x="450" y="410" text-anchor="middle" font-size="10" fill="#555">Katalog (metadata + snapshots): <tspan font-weight="bold">titanic.duckdb</tspan> — Parquet-filer (rådata): <tspan font-weight="bold">lake-data/</tspan></text>
+  <text x="450" y="428" text-anchor="middle" font-size="10" fill="#555">Ingen koppling till PostgreSQL eller MinIO — helt fristående lokal DuckLake.</text>
+  <text x="450" y="446" text-anchor="middle" font-size="10" fill="#888">Persistent storage bör monteras på <tspan font-weight="bold">/app/models</tspan> med DATA_PATH=/app/models/lake-data och CATALOG_PATH=/app/models/titanic.duckdb</text>
+
+  <defs>
+    <marker id="a1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#555"/></marker>
+  </defs>
+</svg>
