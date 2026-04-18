@@ -59,11 +59,12 @@ Hanterar **HTTP-anropen**:
 ```python
 @app.get("/api/kunder")          # GET-endpoint
 def get_kunder():
-    con = get_conn()             # Öppna anslutning
-    rows = con.execute("SELECT * FROM lake.kunder").fetchall()
-    con.close()                  # Stäng anslutning
+    with get_conn() as con:      # Öppna anslutning — stängs automatiskt
+        rows = con.execute("SELECT * FROM lake.kunder").fetchall()
     return rows                  # Returnera JSON
 ```
+
+> `with get_conn() as con:` garanterar att anslutningen stängs även om ett fel uppstår — detta kallas context manager och är ett säkrare mönster än `con.close()`.
 
 ---
 
@@ -125,17 +126,15 @@ class NyRad(BaseModel):
 
 @app.get("/api/min_tabell")
 def get_rader():
-    con = get_conn()
-    rows = con.execute("SELECT id, namn, värde FROM lake.min_tabell").fetchall()
-    con.close()
+    with get_conn() as con:
+        rows = con.execute("SELECT id, namn, värde FROM lake.min_tabell").fetchall()
     return [{"id": r[0], "namn": r[1], "värde": r[2]} for r in rows]
 
 @app.post("/api/min_tabell", status_code=201, dependencies=[Depends(verify_key)])
 def ny_rad(rad: NyRad):
-    con = get_conn()
-    nid = con.execute("SELECT COALESCE(MAX(id),0)+1 FROM lake.min_tabell").fetchone()[0]
-    con.execute("INSERT INTO lake.min_tabell VALUES (?,?,?)", [nid, rad.namn, rad.värde])
-    con.close()
+    with get_conn() as con:
+        nid = con.execute("SELECT COALESCE(MAX(id),0)+1 FROM lake.min_tabell").fetchone()[0]
+        con.execute("INSERT INTO lake.min_tabell VALUES (?,?,?)", [nid, rad.namn, rad.värde])
     return {"id": nid, "namn": rad.namn}
 ```
 

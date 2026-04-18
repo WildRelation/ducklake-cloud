@@ -168,7 +168,6 @@ import duckdb
 import os
 
 POSTGRES_HOST     = os.getenv("POSTGRES_HOST",     "localhost")
-POSTGRES_PORT     = os.getenv("POSTGRES_PORT",     "5432")
 POSTGRES_DB       = os.getenv("POSTGRES_DB",       "ducklake")
 POSTGRES_USER     = os.getenv("POSTGRES_USER",     "duck")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
@@ -183,12 +182,12 @@ def get_conn():
     con.execute("LOAD ducklake")
     con.execute("LOAD postgres")
 
-    # Skapa en "secret" med PostgreSQL-anslutningsdetaljer
+    # PORT hårdkodas till 5432 — undviker Kubernetes POSTGRES_PORT-konflikt
     con.execute(f"""
         CREATE OR REPLACE SECRET (
             TYPE postgres,
             HOST '{POSTGRES_HOST}',
-            PORT {POSTGRES_PORT},
+            PORT 5432,
             DATABASE '{POSTGRES_DB}',
             USER '{POSTGRES_USER}',
             PASSWORD '{POSTGRES_PASSWORD}'
@@ -211,7 +210,7 @@ def get_conn():
     else:
         data_path = "./data/lake/"
 
-    # Koppla ihop katalogen (PostgreSQL) med lagringen (MinIO/disk)
+    # Använd bara dbname i ATTACH — SECRET hanterar autentiseringen
     con.execute(f"""
         ATTACH 'ducklake:postgres:dbname={POSTGRES_DB}'
         AS lake (DATA_PATH '{data_path}')
@@ -257,7 +256,6 @@ python-multipart==0.0.20
 | Variabel | Värde | Varför |
 |----------|-------|--------|
 | `POSTGRES_HOST` | `<postgresql-deployment-namn>` | KTH Cloud löser upp deployment-namn som DNS-adresser internt |
-| `POSTGRES_PORT` | `5432` | PostgreSQLs standardport |
 | `POSTGRES_DB` | `ducklake` | Samma som du satte i deployment 1 |
 | `POSTGRES_USER` | `duck` | Samma som du satte i deployment 1 |
 | `POSTGRES_PASSWORD` | `<lösenord>` | Samma som du satte i deployment 1 |
@@ -413,7 +411,7 @@ LINE 4: PORT tcp://10.43.82.64:5432,
 stmt.execute("... PORT 5432, ...");
 ```
 
-**Lösning för Python:** Om problemet uppstår, byt variabelnamn från `POSTGRES_PORT` till `PG_PORT` eller läs porten från ett annat variabelnamn.
+**Lösning för Python och Java:** Hårdkoda `PORT 5432` direkt i CREATE SECRET och använd bara `dbname` i ATTACH-strängen. Läs aldrig porten från en miljövariabel.
 
 ---
 
