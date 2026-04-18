@@ -1,5 +1,6 @@
 import os
-from contextlib import asynccontextmanager
+import threading
+from contextlib import asynccontextmanager, contextmanager
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -9,27 +10,31 @@ from pipeline import build
 DATA_PATH = os.getenv("DATA_PATH", "./lake-data/")
 CATALOG   = os.getenv("CATALOG_PATH", "./titanic.duckdb")
 
+_con         = None
+_lock        = threading.Lock()
 _model       = None
 _feature_cols = None
 _accuracy    = None
 _report      = None
 
 
+@contextmanager
 def get_con():
-    con = duckdb.connect()
-    con.execute("INSTALL ducklake; LOAD ducklake")
-    con.execute("INSTALL httpfs;   LOAD httpfs")
-    os.makedirs(DATA_PATH, exist_ok=True)
-    con.execute(f"ATTACH 'ducklake:{CATALOG}' AS lake (DATA_PATH '{DATA_PATH}')")
-    return con
+    with _lock:
+        yield _con
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _model, _feature_cols, _accuracy, _report
-    with get_con() as con:
-        _model, _feature_cols, _accuracy, _report = build(con)
+    global _con, _model, _feature_cols, _accuracy, _report
+    _con = duckdb.connect()
+    _con.execute("INSTALL ducklake; LOAD ducklake")
+    _con.execute("INSTALL httpfs;   LOAD httpfs")
+    os.makedirs(DATA_PATH, exist_ok=True)
+    _con.execute(f"ATTACH 'ducklake:{CATALOG}' AS lake (DATA_PATH '{DATA_PATH}')")
+    _model, _feature_cols, _accuracy, _report = build(_con)
     yield
+    _con.close()
 
 
 app = FastAPI(title="Titanic ML — DuckLake Feature Store", lifespan=lifespan)
@@ -147,7 +152,7 @@ def dashboard():
   <p>Random Forest-modell tränad på Titanic-passagerardata</p>
 </header>
 
-<div class="grid" id="stat-cards">
+<div class="grid">
   <div class="card"><div class="label">Träffsäkerhet</div><div class="value green" id="acc">—</div></div>
   <div class="card"><div class="label">Precision (överlevde)</div><div class="value blue" id="prec">—</div></div>
   <div class="card"><div class="label">Recall (överlevde)</div><div class="value orange" id="rec">—</div></div>
@@ -218,7 +223,6 @@ async function load() {
   document.getElementById('prec').textContent = (acc.report['1'].precision * 100).toFixed(1) + '%';
   document.getElementById('rec').textContent  = (acc.report['1'].recall * 100).toFixed(1) + '%';
 
-  // Predictions table
   const tbody = document.querySelector('#pred-table tbody');
   preds.forEach(p => {
     const tr = document.createElement('tr');
@@ -229,7 +233,6 @@ async function load() {
     tbody.appendChild(tr);
   });
 
-  // Survival bar chart
   const survived = feats.filter(f => f.label === 1).length;
   const died     = feats.length - survived;
   new Chart(document.getElementById('survivalChart'), {
@@ -241,7 +244,6 @@ async function load() {
     options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 
-  // Probability histogram
   const buckets = Array(10).fill(0);
   preds.forEach(p => { buckets[Math.min(9, Math.floor(p.survival_probability * 10))]++; });
   new Chart(document.getElementById('probChart'), {
@@ -267,7 +269,7 @@ async function predict() {
   const data = await res.json();
   const box  = document.getElementById('result-box');
   box.style.display = 'block';
-  box.className = data.predicted_survival === 1 ? 'result-box survived' : 'result-box died';
+  box.className = data.predicted_survival === 1 ? 'survived' : 'died';
   box.innerHTML = `<strong>${data.tolkning}</strong> — Sannolikhet: ${(data.survival_probability * 100).toFixed(1)}%`;
 }
 
