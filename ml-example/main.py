@@ -260,7 +260,7 @@ const T = {
     died:          "\u00d6verlevde inte",
     chart_survived:"\u00d6verlevde",
     chart_died:    "\u00d6verlevde inte",
-    lang_toggle:   "\ud83c\udf10 English",
+    lang_toggle:   "&#127760; English",
   },
   en: {
     subtitle:      "Random Forest model trained on Titanic passenger data",
@@ -289,7 +289,7 @@ const T = {
     died:          "Did not survive",
     chart_survived:"Survived",
     chart_died:    "Did not survive",
-    lang_toggle:   "\ud83c\udf10 Svenska",
+    lang_toggle:   "&#127760; Svenska",
   }
 };
 
