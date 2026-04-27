@@ -2,8 +2,20 @@
 
 ## Prerequisites
 
-- Docker + Docker Compose
-- Python 3.10+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
+- [Python 3.10+](https://www.python.org/downloads/)
+- [Git](https://git-scm.com/)
+
+---
+
+## Getting the files
+
+Clone the repository and navigate to the tutorial folder:
+
+```bash
+git clone https://github.com/wildrelation/ducklake-cloud.git
+cd ducklake-cloud/tutorial
+```
 
 ---
 
@@ -11,7 +23,7 @@
 
 ### Step 1 — Start the services
 
-Run the following command in this folder:
+Run the following command inside the `tutorial/` folder:
 
 ```bash
 docker compose up -d
@@ -26,6 +38,8 @@ This starts three services:
 | mc | Creates the bucket automatically | — |
 
 The MinIO console is available at `http://localhost:9001` (user: `ducklake`, password: `minioadmin`).
+
+Wait a few seconds for the services to start before continuing.
 
 ---
 
@@ -50,23 +64,33 @@ The DuckDB UI opens in your browser and `setup.sql` runs automatically — you a
 
 ### Step 3 — Verify
 
-Run in the DuckDB shell:
+Run the following in the DuckDB shell:
 
 ```sql
-CREATE TABLE customers (id INTEGER, name VARCHAR, email VARCHAR);
-INSERT INTO customers VALUES (1, 'Anna', 'anna@example.com');
-SELECT * FROM customers;
+CREATE TABLE test (id INTEGER, message VARCHAR);
+INSERT INTO test VALUES (1, 'DuckLake is working!');
+SELECT * FROM test;
 ```
 
 If you see the row, DuckLake is working — metadata is stored in PostgreSQL and data as Parquet files in MinIO.
+
+You can drop the table when you are done:
+
+```sql
+DROP TABLE test;
+```
+
+Exit the shell with `.exit`.
 
 ---
 
 ## Part 2 — Python API
 
-Make sure Part 1 is running before continuing (`docker compose up -d`).
+Make sure the services from Part 1 are still running (`docker compose up -d`).
 
 ### Project structure
+
+All API files are inside the `api/` folder:
 
 ```
 tutorial/
@@ -74,17 +98,38 @@ tutorial/
 ├── setup.sql
 ├── shell.sh / shell.ps1
 └── api/
-    ├── requirements.txt
-    ├── database.py
-    └── main.py
+    ├── requirements.txt   — Python dependencies
+    ├── database.py        — DuckLake connection
+    └── main.py            — FastAPI endpoints
 ```
 
 ---
 
-### Step 1 — Install dependencies
+### Step 1 — Create a virtual environment and install dependencies
+
+Navigate to the `api/` folder:
 
 ```bash
 cd api
+```
+
+Create and activate a virtual environment:
+
+**Linux/macOS:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**Windows (PowerShell):**
+```powershell
+python -m venv venv
+./venv/Scripts/Activate.ps1
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
@@ -94,76 +139,11 @@ pip install -r requirements.txt
 
 This file handles the connection to DuckLake. It connects DuckDB to PostgreSQL (catalog) and MinIO (Parquet storage) using the DuckLake extension.
 
-```python
-import duckdb
-import os
-from minio import Minio
+Open `database.py` and read through it. Key points:
 
-POSTGRES_HOST     = os.getenv("POSTGRES_HOST",     "localhost")
-POSTGRES_DB       = os.getenv("POSTGRES_DB",       "ducklake")
-POSTGRES_USER     = os.getenv("POSTGRES_USER",     "duck")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
-
-S3_ENDPOINT = os.getenv("S3_ENDPOINT", "localhost:9000")
-S3_KEY_ID   = os.getenv("S3_KEY_ID",   "ducklake")
-S3_SECRET   = os.getenv("S3_SECRET",   "minioadmin")
-S3_BUCKET   = os.getenv("S3_BUCKET",   "ducklake")
-
-
-def ensure_bucket():
-    client = Minio(S3_ENDPOINT, access_key=S3_KEY_ID, secret_key=S3_SECRET, secure=False)
-    if not client.bucket_exists(S3_BUCKET):
-        client.make_bucket(S3_BUCKET)
-
-
-def get_conn() -> duckdb.DuckDBPyConnection:
-    con = duckdb.connect()
-
-    con.execute("INSTALL ducklake; LOAD ducklake")
-    con.execute("INSTALL postgres;  LOAD postgres")
-
-    con.execute(f"""
-        CREATE OR REPLACE SECRET (
-            TYPE     postgres,
-            HOST     '{POSTGRES_HOST}',
-            PORT     5432,
-            DATABASE '{POSTGRES_DB}',
-            USER     '{POSTGRES_USER}',
-            PASSWORD '{POSTGRES_PASSWORD}'
-        )
-    """)
-
-    con.execute("INSTALL httpfs; LOAD httpfs")
-    con.execute(f"""
-        CREATE OR REPLACE SECRET (
-            TYPE      s3,
-            KEY_ID    '{S3_KEY_ID}',
-            SECRET    '{S3_SECRET}',
-            REGION    'local',
-            ENDPOINT  '{S3_ENDPOINT}',
-            URL_STYLE 'path',
-            USE_SSL   false
-        )
-    """)
-
-    con.execute(f"""
-        ATTACH 'ducklake:postgres:dbname={POSTGRES_DB}'
-        AS my_lake (DATA_PATH 's3://{S3_BUCKET}/')
-    """)
-
-    return con
-
-
-def init_db():
-    with get_conn() as con:
-        con.execute("""
-            CREATE TABLE IF NOT EXISTS my_lake.customers (
-                id      INTEGER,
-                name    VARCHAR NOT NULL,
-                email   VARCHAR NOT NULL
-            )
-        """)
-```
+- All configuration is read from environment variables with sensible defaults for local development
+- `get_conn()` creates a new DuckDB connection, loads the DuckLake and PostgreSQL extensions, and attaches the lake
+- `init_db()` creates the `customers` table if it does not exist yet
 
 > A new DuckDB connection is created for each request. This is intentional — DuckLake uses snapshots and requires a fresh connection to see the latest data.
 
@@ -171,63 +151,15 @@ def init_db():
 
 ### Step 3 — main.py
 
-A simple FastAPI application with three endpoints for the `customers` table.
+Open `main.py` and read through it. It is a FastAPI application with three endpoints:
 
-```python
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from pydantic import BaseModel
-from database import get_conn, init_db, ensure_bucket
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/customers` | Get all customers |
+| POST | `/customers` | Create a new customer |
+| DELETE | `/customers/{id}` | Delete a customer |
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    ensure_bucket()
-    init_db()
-    yield
-
-
-app = FastAPI(title="DuckLake API", lifespan=lifespan)
-
-
-class NewCustomer(BaseModel):
-    name: str
-    email: str
-
-
-@app.get("/customers")
-def get_customers():
-    with get_conn() as con:
-        rows = con.execute(
-            "SELECT id, name, email FROM my_lake.customers ORDER BY id"
-        ).fetchall()
-    return [{"id": r[0], "name": r[1], "email": r[2]} for r in rows]
-
-
-@app.post("/customers", status_code=201)
-def create_customer(customer: NewCustomer):
-    with get_conn() as con:
-        new_id = con.execute(
-            "SELECT COALESCE(MAX(id), 0) + 1 FROM my_lake.customers"
-        ).fetchone()[0]
-        con.execute(
-            "INSERT INTO my_lake.customers VALUES (?, ?, ?)",
-            [new_id, customer.name, customer.email]
-        )
-    return {"id": new_id, "name": customer.name, "email": customer.email}
-
-
-@app.delete("/customers/{customer_id}")
-def delete_customer(customer_id: int):
-    with get_conn() as con:
-        con.execute("DELETE FROM my_lake.customers WHERE id = ?", [customer_id])
-    return {"deleted": customer_id}
-
-
-@app.get("/healthz")
-def health():
-    return {"status": "ok"}
-```
+On startup, the app calls `ensure_bucket()` (creates the MinIO bucket if missing) and `init_db()` (creates the table if missing).
 
 ---
 
@@ -238,25 +170,56 @@ uvicorn main:app --reload
 ```
 
 The API is now available at `http://localhost:8000`.  
-Interactive docs: `http://localhost:8000/docs`
+Interactive docs (Swagger UI): `http://localhost:8000/docs`
 
 ---
 
 ### Step 5 — Test the API
 
+You can use the Swagger UI at `http://localhost:8000/docs` to test all endpoints in the browser.
+
+Or use `curl` from the terminal:
+
 **Get all customers:**
+
 ```bash
 curl http://localhost:8000/customers
 ```
 
 **Create a customer:**
+
+Linux/macOS:
 ```bash
 curl -X POST http://localhost:8000/customers \
   -H "Content-Type: application/json" \
   -d '{"name": "Anna", "email": "anna@example.com"}'
 ```
 
+Windows (PowerShell):
+```powershell
+curl -X POST http://localhost:8000/customers `
+  -H "Content-Type: application/json" `
+  -d '{"name": "Anna", "email": "anna@example.com"}'
+```
+
 **Delete a customer:**
+
 ```bash
 curl -X DELETE http://localhost:8000/customers/1
+```
+
+---
+
+### Step 6 — Stop everything
+
+Stop the API with `Ctrl+C`, then stop the Docker services:
+
+```bash
+docker compose down
+```
+
+To also delete all stored data:
+
+```bash
+docker compose down -v
 ```
