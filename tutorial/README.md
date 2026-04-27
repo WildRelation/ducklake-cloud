@@ -31,12 +31,17 @@ MinIO-konsolen når du på `http://localhost:9001` (användare: `ducklake`, lös
 
 ### Steg 2 — Öppna DuckDB-shell
 
+**Linux/macOS:**
+
 ```bash
-docker run --rm -it \
-  --network host \
-  -v $(pwd):/workspace \
-  -w /workspace \
-  duckdb/duckdb /duckdb -init setup.sql -ui
+chmod +x shell.sh
+./shell.sh
+```
+
+**Windows (PowerShell):**
+
+```powershell
+./shell.ps1
 ```
 
 DuckDB UI öppnas i webbläsaren och `setup.sql` körs automatiskt — du är nu ansluten till ditt DuckLake.
