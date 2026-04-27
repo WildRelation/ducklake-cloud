@@ -157,6 +157,7 @@ Open `main.py` and read through it. It is a FastAPI application with three endpo
 |--------|----------|-------------|
 | GET | `/customers` | Get all customers |
 | POST | `/customers` | Create a new customer |
+| PUT | `/customers/{id}` | Update a customer |
 | DELETE | `/customers/{id}` | Delete a customer |
 
 On startup, the app calls `ensure_bucket()` (creates the MinIO bucket if missing) and `init_db()` (creates the table if missing).
@@ -200,6 +201,22 @@ Windows (PowerShell):
 curl -X POST http://localhost:8000/customers `
   -H "Content-Type: application/json" `
   -d '{"name": "Anna", "email": "anna@example.com"}'
+```
+
+**Update a customer:**
+
+Linux/macOS:
+```bash
+curl -X PUT http://localhost:8000/customers/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Anna Updated", "email": "anna.updated@example.com"}'
+```
+
+Windows (PowerShell):
+```powershell
+curl -X PUT http://localhost:8000/customers/1 `
+  -H "Content-Type: application/json" `
+  -d '{"name": "Anna Updated", "email": "anna.updated@example.com"}'
 ```
 
 **Delete a customer:**

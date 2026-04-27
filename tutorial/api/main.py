@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import get_conn, init_db, ensure_bucket
 
@@ -39,6 +39,21 @@ def create_customer(customer: NewCustomer):
             [new_id, customer.name, customer.email]
         )
     return {"id": new_id, "name": customer.name, "email": customer.email}
+
+
+@app.put("/customers/{customer_id}")
+def update_customer(customer_id: int, customer: NewCustomer):
+    with get_conn() as con:
+        affected = con.execute(
+            "SELECT COUNT(*) FROM my_lake.customers WHERE id = ?", [customer_id]
+        ).fetchone()[0]
+        if affected == 0:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        con.execute(
+            "UPDATE my_lake.customers SET name = ?, email = ? WHERE id = ?",
+            [customer.name, customer.email, customer_id]
+        )
+    return {"id": customer_id, "name": customer.name, "email": customer.email}
 
 
 @app.delete("/customers/{customer_id}")
